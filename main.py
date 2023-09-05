@@ -58,7 +58,7 @@ async def shutdown():
 async def get_machines_by_dorm(dorm_id: int):
     query = f"SELECT * FROM {dorm_id} WHERE dorm = :dorm_id"
     machines = await database.fetch_all(query=query, values={"dorm_id": dorm_id})
-    return machines
+    return "hello machines"
 
 @app.post("/machine/")
 async def create_machine(machine: Machine):
