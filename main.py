@@ -1,18 +1,50 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from datetime import datetime
-import databases
 from dotenv import load_dotenv
 import os
 from enum import Enum
 from typing import Optional
 from pydantic import BaseModel
+from sqlalchemy import create_engine, Column, Integer, DateTime , String
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
 
-class Machine(BaseModel):
-    machine_id: int
+app = FastAPI()
+
+load_dotenv()
+app = FastAPI()
+user, password, host, port, database = (
+    os.environ.get('DATABASE_USER'),
+    os.environ.get('DATABASE_PASSWORD'),
+    os.environ.get('DATABASE_HOST'),
+    os.environ.get('DATABASE_PORT'),
+    os.environ.get('DATABASE_NAME')
+)
+
+# Create a database URL
+DATABASE_URL = f"mysql+pymysql://{user}:{password}@{host}:{port}/{database}"
+
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+
+class Machine(Base):
+    __tablename__ = "machines"
+    id = Column(Integer, primary_key=True, index=True, nullable=False)
+    code = Column(Integer, index=True, nullable=False)
+    dorm = Column(Integer, nullable=False)
+    type = Column(Integer, nullable=False)
+    status = Column(Integer, nullable=False)
+    started_at = Column(DateTime)
+
+Base.metadata.create_all(bind=engine)
+
+class MachineCreate(BaseModel):
+    code: int
     dorm: int
     type: int
     status: int
-    started_at: Optional[datetime] = None
+
 
 class Dorm(Enum): 
     AWOMEN = 0
@@ -31,41 +63,31 @@ class Status(Enum):
     USING = 1
     DISABLED = 2
 
-load_dotenv()
-app = FastAPI()
-user, password, host, port, database = (
-    os.environ.get('user'),
-    os.environ.get('password'),
-    os.environ.get('host'),
-    os.environ.get('port'),
-    os.environ.get('database')
-)
 
-# Create a database URL
-DATABASE_URL = f"mysql+pymysql://{user}:{password}@{host}:{port}/{database}"
-# Create a database object
-database = databases.Database(DATABASE_URL)
+@app.get("/")
+def runner():
+    return "api running"
 
-@app.on_event("startup")
-async def startup():
-    await database.connect()
+@app.get("/machine/{dorm_id}")
+def get_machines_by_dorm(dorm_id: int):
+    db = SessionLocal()
+    machines = db.query(Machine).filter(Machine.dorm == dorm_id)
+    db.close()
+    if machines is None:
+        raise HTTPException(status_code=404, detail="machine not found")
+    return machines
 
-@app.on_event("shutdown")
-async def shutdown():
-    await database.disconnect()
-
-@app.get("/machine")
-async def get_machines_by_dorm(dorm_id: int):
-    query = f"SELECT * FROM {dorm_id} WHERE dorm = :dorm_id"
-    machines = await database.fetch_all(query=query, values={"dorm_id": dorm_id})
-    return "hello machines"
 
 @app.post("/machine/")
-async def create_machine(machine: Machine):
-    query = f"INSERT INTO `machines` (`id`, `dorm`, `type`, `status`) VALUES ({Machine.machine_id}, {Machine.dorm}, {Machine.type}, {Machine.status});"
-    database.execute(query)
-    return machine
+def create_machine(machine: MachineCreate):
+    db_machine = Machine(**machine.dict())
+    db = SessionLocal()
+    db.add(db_machine)
+    db.commit()
+    db.refresh(db_machine)
+    db.close()
+    return db_machine
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8080, reload=True)
