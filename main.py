@@ -45,9 +45,6 @@ class MachineCreate(BaseModel):
     status: int
 
 class MachineUpdate(BaseModel):
-    code: int
-    dortm: int
-    type: int
     status: int
     started_at: datetime
 
@@ -92,21 +89,21 @@ def create_machine(machine: MachineCreate):
     return db_machine
 
 @app.patch("/machines/{machine_id}")
-def update_item(machine_id: int, item_update: MachineUpdate):
+def update_machine(machine_id: int, machine_update: MachineUpdate):
     db = SessionLocal()
-    db_item = db.query(Machine).filter(Machine.id == machine_id).first()
+    db_machine = db.query(Machine).filter(Machine.id == machine_id).first()
 
-    if db_item is None:
+    if db_machine is None:
         db.close()
-        raise HTTPException(status_code=404, detail="Item not found")
+        raise HTTPException(status_code=404, detail="machine not found")
 
-    for field, value in item_update.dict(exclude_unset=True).items():
-        setattr(db_item, field, value)
+    for field, value in machine_update.dict(exclude_unset=True).items():
+        setattr(db_machine, field, value)
 
     db.commit()
-    db.refresh(db_item)
+    db.refresh(db_machine)
     db.close()
-    return db_item
+    return db_machine
 
 if __name__ == "__main__":
     import uvicorn
