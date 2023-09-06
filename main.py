@@ -23,7 +23,6 @@ user, password, host, port, database = (
 
 # Create a database URL
 DATABASE_URL = f"mysql+pymysql://{user}:{password}@{host}:{port}/{database}"
-
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
@@ -45,6 +44,12 @@ class MachineCreate(BaseModel):
     type: int
     status: int
 
+class MachineUpdate(BaseModel):
+    code: int
+    dortm: int
+    type: int
+    status: int
+    started_at: datetime
 
 class Dorm(Enum): 
     AWOMEN = 0
@@ -63,22 +68,20 @@ class Status(Enum):
     USING = 1
     DISABLED = 2
 
-
 @app.get("/")
 def runner():
     return "api running"
 
-@app.get("/machine/{dorm_id}")
+@app.get("/machines/{dorm_id}")
 def get_machines_by_dorm(dorm_id: int):
     db = SessionLocal()
-    machines = db.query(Machine).filter(Machine.dorm == dorm_id)
+    machines = db.query(Machine).filter(Machine.dorm == dorm_id).all()
     db.close()
     if machines is None:
         raise HTTPException(status_code=404, detail="machine not found")
     return machines
 
-
-@app.post("/machine/")
+@app.post("/machines/")
 def create_machine(machine: MachineCreate):
     db_machine = Machine(**machine.dict())
     db = SessionLocal()
@@ -87,6 +90,23 @@ def create_machine(machine: MachineCreate):
     db.refresh(db_machine)
     db.close()
     return db_machine
+
+@app.patch("/machines/{machine_id}")
+def update_item(machine_id: int, item_update: MachineUpdate):
+    db = SessionLocal()
+    db_item = db.query(Machine).filter(Machine.id == machine_id).first()
+
+    if db_item is None:
+        db.close()
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    for field, value in item_update.dict(exclude_unset=True).items():
+        setattr(db_item, field, value)
+
+    db.commit()
+    db.refresh(db_item)
+    db.close()
+    return db_item
 
 if __name__ == "__main__":
     import uvicorn
