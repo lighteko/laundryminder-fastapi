@@ -3,7 +3,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 import os
 from pydantic import BaseModel
-from sqlalchemy import create_engine, Column, Integer, DateTime , String
+from sqlalchemy import create_engine, Column, Integer, DateTime
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
