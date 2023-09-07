@@ -59,6 +59,15 @@ def get_machines_by_dorm(dorm_id: int):
         raise HTTPException(status_code=404, detail="machine not found")
     return machines
 
+@app.get("/machines")
+def get_machines_by_dorm():
+    db = SessionLocal()
+    machines = db.query(Machine).all()
+    db.close()
+    if machines is None:
+        raise HTTPException(status_code=404, detail="machine not found")
+    return machines
+
 @app.post("/machines/")
 def create_machine(machine: MachineCreate):
     db_machine = Machine(**machine.model_dump())
