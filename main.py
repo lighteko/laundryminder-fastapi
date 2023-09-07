@@ -48,23 +48,6 @@ class MachineUpdate(BaseModel):
     status: int
     started_at: datetime
 
-class Dorm(Enum): 
-    AWOMEN = 0
-    AMEN = 1
-    BWOMEN = 2
-    BMEN = 3
-
-# class Machine(Enum):
-#     WASHER = 1
-#     SHOE_WASHER = -1
-#     DRYER = 2
-#     SHOE_DRYER = -2
-
-class Status(Enum):
-    NOT_USING = 0
-    USING = 1
-    DISABLED = 2
-
 @app.get("/")
 def runner():
     return "api running"
@@ -105,6 +88,18 @@ def update_machine(machine_id: int, machine_update: MachineUpdate):
     db.close()
     return db_machine
 
+@app.delete("/machines/{machine_id}")
+def delete_machine(machine_id: int):
+    db = SessionLocal()
+    db_machine = db.query(Machine).filter(Machine.id == machine_id).first()
+    if db_machine is None:
+        db.close()
+        raise HTTPException(status_code=404, detail="Machine not found")
+    db.delete(db_machine)
+    db.commit()
+    db.close()
+    return machine_id
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8080, reload=True)
+    uvicorn.run(app)
