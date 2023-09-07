@@ -61,7 +61,7 @@ def get_machines_by_dorm(dorm_id: int):
 
 @app.post("/machines/")
 def create_machine(machine: MachineCreate):
-    db_machine = Machine(**machine.dict())
+    db_machine = Machine(**machine.model_dump())
     db = SessionLocal()
     db.add(db_machine)
     db.commit()
