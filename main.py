@@ -73,14 +73,11 @@ def create_machine(machine: MachineCreate):
 def update_machine(machine_id: int, machine_update: MachineUpdate):
     db = SessionLocal()
     db_machine = db.query(Machine).filter(Machine.id == machine_id).first()
-
     if db_machine is None:
         db.close()
         raise HTTPException(status_code=404, detail="machine not found")
-
     for field, value in machine_update.dict(exclude_unset=True).items():
         setattr(db_machine, field, value)
-
     db.commit()
     db.refresh(db_machine)
     db.close()
