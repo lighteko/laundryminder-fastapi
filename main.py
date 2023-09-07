@@ -2,8 +2,6 @@ from fastapi import FastAPI, HTTPException
 from datetime import datetime
 from dotenv import load_dotenv
 import os
-from enum import Enum
-from typing import Optional
 from pydantic import BaseModel
 from sqlalchemy import create_engine, Column, Integer, DateTime , String
 from sqlalchemy.orm import sessionmaker
