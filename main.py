@@ -60,7 +60,7 @@ def get_machines_by_dorm(dorm_id: int):
     return machines
 
 @app.get("/machines")
-def get_machines_by_dorm():
+def get_machines():
     db = SessionLocal()
     machines = db.query(Machine).all()
     db.close()
