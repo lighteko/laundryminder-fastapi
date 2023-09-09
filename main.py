@@ -25,6 +25,7 @@ engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
+
 class Machine(Base):
     __tablename__ = "machines"
     id = Column(Integer, primary_key=True, index=True, nullable=False)
@@ -34,7 +35,9 @@ class Machine(Base):
     status = Column(Integer, nullable=False)
     started_at = Column(DateTime)
 
+
 Base.metadata.create_all(bind=engine)
+
 
 class MachineCreate(BaseModel):
     code: int
@@ -42,13 +45,16 @@ class MachineCreate(BaseModel):
     type: int
     status: int
 
+
 class MachineUpdate(BaseModel):
     status: int
     started_at: datetime
 
+
 @app.get("/")
 def runner():
     return "api running"
+
 
 @app.get("/machines/{dorm_id}")
 def get_machines_by_dorm(dorm_id: int):
@@ -59,6 +65,17 @@ def get_machines_by_dorm(dorm_id: int):
         raise HTTPException(status_code=404, detail="machine not found")
     return machines
 
+
+@app.get("/machines/{machine_id}")
+def get_machine_by_id(machine_id: int):
+    db = SessionLocal()
+    machine = db.query(Machine).filter(Machine.id == machine_id).first()
+    db.close()
+    if machine is None:
+        raise HTTPException(status_code=404, detail="machine not found")
+    return machine
+
+
 @app.get("/machines")
 def get_machines():
     db = SessionLocal()
@@ -67,6 +84,7 @@ def get_machines():
     if machines is None:
         raise HTTPException(status_code=404, detail="machine not found")
     return machines
+
 
 @app.post("/machines/")
 def create_machine(machine: MachineCreate):
@@ -77,6 +95,7 @@ def create_machine(machine: MachineCreate):
     db.refresh(db_machine)
     db.close()
     return db_machine
+
 
 @app.patch("/machines/{machine_id}")
 def update_machine(machine_id: int, machine_update: MachineUpdate):
@@ -92,6 +111,7 @@ def update_machine(machine_id: int, machine_update: MachineUpdate):
     db.close()
     return db_machine
 
+
 @app.delete("/machines/{machine_id}")
 def delete_machine(machine_id: int):
     db = SessionLocal()
@@ -103,6 +123,7 @@ def delete_machine(machine_id: int):
     db.commit()
     db.close()
     return machine_id
+
 
 if __name__ == "__main__":
     import uvicorn
