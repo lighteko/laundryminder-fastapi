@@ -66,10 +66,10 @@ def get_machines_by_dorm(dorm_id: int):
     return machines
 
 
-@app.get("/machines/?id={machine_id}")
-def get_machine_by_id(machine_id: int):
+@app.get("/machines/")
+def get_machine_by_id(id: int):
     db = SessionLocal()
-    machine = db.query(Machine).filter(Machine.id == machine_id).first()
+    machine = db.query(Machine).filter(Machine.id == id).first()
     db.close()
     if machine is None:
         raise HTTPException(status_code=404, detail="machine not found")
