@@ -66,7 +66,7 @@ def get_machines_by_dorm(dorm_id: int):
     return machines
 
 
-@app.get("/machines/{machine_id}")
+@app.get("/machines/?id={machine_id}")
 def get_machine_by_id(machine_id: int):
     db = SessionLocal()
     machine = db.query(Machine).filter(Machine.id == machine_id).first()
